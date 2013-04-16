@@ -1,17 +1,17 @@
-name:          foo
-category:      foo
+name:          dtree
+category:      dtree
 version:       0.1
 license:       BSD3
 cabal-version: >= 1.10
 license-file:  LICENSE
-author:        Edward A. Kmett
-maintainer:    Edward A. Kmett <ekmett@gmail.com>
+author:        Ben Gamari
+maintainer:    Ben Gamari <bgamari@gmail.com>
 stability:     experimental
-homepage:      http://github.com/ekmett/foo/
-bug-reports:   http://github.com/ekmett/foo/issues
-copyright:     Copyright (C) 2013 Edward A. Kmett
-synopsis:      foo
-description:   foo
+homepage:      http://github.com/bgamari/dtree
+bug-reports:   http://github.com/bgamari/dtree/issues
+copyright:     Copyright (C) 2013 Ben Gamari
+synopsis:      On-disk trees
+--description:   foo
 build-type:    Custom
 
 extra-source-files:
@@ -27,14 +27,21 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: git://github.com/ekmett/foo.git
+  location: git://github.com/bgamari/dtree.git
 
 library
   hs-source-dirs: src
   default-language: Haskell2010
+  exposed-modules:     Data.DIntMap
+                       Data.DiskStore
   ghc-options: -Wall
   build-depends:
-    base >= 4.4 && < 5
+    base >= 4.4 && < 5,
+    directory,
+    containers >= 0.5,
+    bytestring,
+    binary,
+    hashable
 
 test-suite doctests
   type:    exitcode-stdio-1.0
