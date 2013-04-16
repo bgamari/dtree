@@ -29,7 +29,6 @@ import Data.Binary
 import Data.Binary.Put
 import Data.Binary.Get
 
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 
 newtype Obj a = Obj Word64
@@ -58,7 +57,8 @@ appendObj dstore a = withReadLock dstore $ do
     BSL.hPut h $ encode a
     return $ Obj $ fromIntegral offset
 
-headerMagic = 0xdeadbeef :: Word64
+headerMagic :: Word64
+headerMagic = 0xdeadbeef
 
 data Header a = Header { magic :: !Word64
                        , root  :: !(Maybe (Obj a))
@@ -76,7 +76,8 @@ data DiskStore a = DStore { handle :: !Handle
                           , readLock :: !(MVar ())
                           }
 
-headerObj = Obj 0 :: Obj (Header a)
+headerObj :: Obj (Header a)
+headerObj = Obj 0
 
 getHeader :: DiskStore a -> IO (Maybe (Header a))
 getHeader dstore = do
