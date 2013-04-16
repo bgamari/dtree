@@ -22,6 +22,9 @@ import System.IO
 import System.Directory
 import Control.Monad
 
+import System.Posix.Fsync (fsync)
+import System.Posix.IO.ByteString (handleToFd)
+
 import Data.Binary
 import Data.Binary.Put
 import Data.Binary.Get
@@ -99,10 +102,15 @@ getRoot dstore = do
 
 setRoot :: DiskStore a -> Maybe (Obj a) -> IO ()
 setRoot dstore root = do
+    writeBarrier dstore
     header <- getHeader dstore
     case header of
       Just hdr -> putHeader dstore (hdr {root=root})
       Nothing  -> error "DiskStore: Invalid header"
+
+writeBarrier :: DiskStore a -> IO ()
+writeBarrier dstore =
+    handleToFd (handle dstore) >>= fsync
 
 fromHandle :: Handle -> IO (Maybe (DiskStore a))
 fromHandle h = do
