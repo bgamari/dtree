@@ -12,7 +12,7 @@ module Data.DIntMap ( DIntMap
                     , showTree
                     ) where
 
-import Prelude hiding (mapM, mapM_, lookup, concatMap)
+import Prelude hiding (mapM, mapM_, lookup, concatMap, last)
 import Data.Binary
 import Data.Binary.Get
 import Data.Binary.Put
