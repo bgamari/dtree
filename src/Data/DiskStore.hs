@@ -103,7 +103,7 @@ getRoot dstore = do
 
 setRoot :: DiskStore a -> Maybe (Obj a) -> IO ()
 setRoot dstore root = do
-    writeBarrier dstore
+    --writeBarrier dstore   -- FIXME
     header <- getHeader dstore
     case header of
       Just hdr -> putHeader dstore (hdr {root=root})
