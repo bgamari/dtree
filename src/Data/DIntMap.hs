@@ -16,7 +16,6 @@ import Prelude hiding (mapM, mapM_, lookup, concatMap)
 import Data.Binary
 import Data.Binary.Get
 import Data.Binary.Put
-import Data.Hashable
 import Data.Foldable
 import Data.Traversable
 import Data.Monoid
