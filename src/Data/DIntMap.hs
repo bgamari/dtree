@@ -5,6 +5,7 @@ module Data.DIntMap ( DIntMap
                     , empty
                     , insert, insertWith
                     , lookup
+                    , cachedLookup
                     , writeTree
                     , getRoot, putRoot
                     , new
@@ -109,7 +110,24 @@ lookup' dmap k tree = do
     child <- readChild dmap k tree
     case child of
       Just tree' -> lookup' dmap k tree'
-      Nothing   -> return Nothing
+      Nothing    -> return Nothing
+
+cachedLookup :: (Binary v) => Key -> DIntMap v -> IO (Maybe v, MemTree v)
+cachedLookup k dmap = getRoot dmap >>= cachedLookup' k dmap
+
+cachedLookup' :: (Binary v) => Key -> DIntMap v -> MemTree v -> IO (Maybe v, MemTree v)
+cachedLookup' k _    tree@(Leaf _ values) = return $ (IM.lookup k values, tree)
+cachedLookup' k dmap tree = do
+    child <- readChild dmap k tree
+    case child of
+      Just tree' -> do (v, t) <- cachedLookup' k dmap tree'
+                       let updateRef (RefObj obj _) = RefObj obj (Just tree')
+                           updateRef (NewObj _) = error "DIntMap: This shouldn't happen"
+                       case tree of
+                         Internal n children ->
+                           return (v, Internal n $ updateBin updateRef k children)
+      Nothing    -> return (Nothing, tree)
+
 
 -- | Divide an IntMap into two pieces of roughly equal size
 divide :: IM.IntMap a -> (IM.IntMap a, IM.IntMap a)
