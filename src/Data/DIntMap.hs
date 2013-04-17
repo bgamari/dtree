@@ -108,7 +108,7 @@ lookup' _    k (Leaf _ values) = return $ IM.lookup k values
 lookup' dmap k tree = do
     child <- readChild dmap k tree
     case child of
-      Just tree -> lookup' dmap k tree
+      Just tree' -> lookup' dmap k tree'
       Nothing   -> return Nothing
 
 -- | Divide an IntMap into two pieces of roughly equal size
