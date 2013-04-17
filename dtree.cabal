@@ -34,12 +34,14 @@ library
   default-language: Haskell2010
   exposed-modules:     Data.DIntMap
                        Data.DiskStore
+                       Data.DHashMap
   other-modules:       System.Posix.Fsync
   ghc-options: -Wall
   build-depends:
     base >= 4.4 && < 5,
     directory,
     unix,
+    mtl,
     containers >= 0.5,
     bytestring,
     binary,
