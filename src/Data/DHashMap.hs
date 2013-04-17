@@ -17,7 +17,6 @@ import Control.Monad.Reader
 import Control.Applicative
 
 import Data.Hashable (Hashable, hashWithSalt)
-import qualified Data.Binary as B
 import Data.Binary (Binary)
 
 import qualified Data.DIntMap as DIM
@@ -32,7 +31,7 @@ open fname = fmap DHashMap <$> DIM.open fname
 
 
 newtype DHashMapT k v m a = DHashMapT (StateT (DIM.MemTree v) (ReaderT (DIM.DIntMap v) m) a)
-                       deriving (Monad)
+                          deriving (Monad)
 
 runDHashMapT :: (Binary k, Binary v, MonadIO m)
             => DHashMap k v -> DHashMapT k v m a -> m a
@@ -43,10 +42,10 @@ runDHashMapT (DHashMap imap) (DHashMapT a) = do
 flushCache :: (Binary k, Binary v, MonadIO m) => DHashMapT k v m ()
 flushCache = DHashMapT $ lift ask >>= liftIO . DIM.getRoot >>= put
 
-commit :: (Binary k, Binary v, MonadIO m) => DHashMapT k v m ()
+commit :: (Binary k, Binary v, Functor m, MonadIO m) => DHashMapT k v m ()
 commit = DHashMapT $ do dmap <- lift ask
                         s <- get
-                        liftIO $ DIM.putRoot dmap s
+                        void $ liftIO $ DIM.putRoot dmap s
                         return ()
 
 insert :: (Hashable k, Binary k, Binary v, MonadIO m)
@@ -60,6 +59,7 @@ insertWith f k v = DHashMapT $ do
     s <- get
     liftIO (DIM.insertWith dmap f (hashKey k) v s) >>= put
 
+salt :: Int
 salt = 0xdeadbeef
 
 hashKey :: Hashable k => k -> Int
