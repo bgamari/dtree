@@ -54,11 +54,6 @@ updateBin f k (Bin rest last) =
       Just (k',b) -> Bin (IM.adjust f k' rest) last
       Nothing     -> Bin rest (f last)
 
-binMinKey :: Bin a -> Maybe Key
-binMinKey (Bin rest _)
-    | IM.null rest  = Nothing
-    | otherwise     = let (k,_) = IM.findMin rest in Just k
-
 binSize :: Bin a -> Int
 binSize (Bin rest _) = IM.size rest + 1
 
@@ -72,21 +67,11 @@ data Tree v = Leaf { _tNValues :: !Int
 empty :: Tree v
 empty = Leaf 0 IM.empty
 
-minKey :: Tree v -> Maybe Key
-minKey (Leaf _ values)
-    | IM.null values  = Nothing
-    | otherwise       = let (k,_) = IM.findMin values in Just k
-minKey (Internal _ children) = binMinKey children
-
 type DiskTree v = Tree v
 type MemTree v = Tree v
 data ObjUpdate a = RefObj !(DS.Obj a) !(Maybe a)
                  | NewObj !a
                  deriving (Show)
-
-commitObjUpdate :: Binary a => DS.DiskStore a -> ObjUpdate a -> IO (DS.Obj a)
-commitObjUpdate _      (RefObj a _) = return a
-commitObjUpdate dstore (NewObj a  ) = DS.appendObj dstore a
 
 instance Binary (ObjUpdate a) where
     put (RefObj ref _) = put ref
