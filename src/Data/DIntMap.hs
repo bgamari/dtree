@@ -26,6 +26,7 @@ import Data.IntMap (Key)
 
 import qualified Data.DiskStore as DS
 
+maxBreadth :: Int
 maxBreadth = 1024
 
 data Bin a = Bin !(IM.IntMap a) !a
