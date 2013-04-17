@@ -51,7 +51,7 @@ insertBin k v (Bin rest last) = Bin (IM.insert k v rest) last
 updateBin :: (a -> a) -> Int -> Bin a -> Bin a
 updateBin f k (Bin rest last) =
     case IM.lookupGT k rest of
-      Just (k',b) -> Bin (IM.adjust f k' rest) last
+      Just (k',_) -> Bin (IM.adjust f k' rest) last
       Nothing     -> Bin rest (f last)
 
 binSize :: Bin a -> Int
@@ -104,7 +104,7 @@ lookup :: (Binary v) => Key -> DIntMap v -> IO (Maybe v)
 lookup k dmap = getRoot dmap >>= lookup' dmap k
 
 lookup' :: (Binary v) => DIntMap v -> Key -> MemTree v -> IO (Maybe v)
-lookup' dmap k (Leaf _ values) = return $ IM.lookup k values
+lookup' _    k (Leaf _ values) = return $ IM.lookup k values
 lookup' dmap k tree = do
     child <- readChild dmap k tree
     case child of
@@ -198,7 +198,7 @@ writeTree dmap@(DIntMap store) tree = do
 -- | Fetch the child node corresponding to the given key (if such node exists)
 readChild :: (Binary v)
           => DIntMap v -> Key -> MemTree v -> IO (Maybe (MemTree v))
-readChild (DIntMap store) _ (Leaf _ _)          = return Nothing
+readChild (DIntMap _    ) _ (Leaf _ _)          = return Nothing
 readChild (DIntMap store) k (Internal _ children) =
     case lookupBin k children of
         (NewObj obj)          -> return $ Just obj
