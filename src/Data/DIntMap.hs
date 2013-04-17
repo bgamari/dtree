@@ -115,10 +115,10 @@ instance (Binary v) => Binary (DiskTree v) where
 
 data DIntMap v = DIntMap { _store :: DS.DiskStore (DiskTree v) }
 
-lookup :: (Binary v, Show v) => Key -> DIntMap v -> IO (Maybe v)
+lookup :: (Binary v) => Key -> DIntMap v -> IO (Maybe v)
 lookup k dmap = getRoot dmap >>= lookup' dmap k
 
-lookup' :: (Binary v, Show v) => DIntMap v -> Key -> MemTree v -> IO (Maybe v)
+lookup' :: (Binary v) => DIntMap v -> Key -> MemTree v -> IO (Maybe v)
 lookup' dmap k (Leaf _ values) = return $ IM.lookup k values
 lookup' dmap k tree = do
     child <- readChild dmap k tree
@@ -134,14 +134,14 @@ divide m = let n = IM.size m
                (a,x,b) = IM.splitLookup k m
            in (maybe a (\v->IM.insert k v a) x, b)
 
-insert :: (Binary v, Show v) => DIntMap v -> Key -> v -> MemTree v -> IO (MemTree v)
+insert :: (Binary v) => DIntMap v -> Key -> v -> MemTree v -> IO (MemTree v)
 insert dmap = insertWith dmap (\_ a->a)
 
 data Insert v = Ok !(MemTree v)
               | Split !Key !(MemTree v) !(MemTree v)
               deriving (Show)
 
-insertWith :: (Binary v, Show v)
+insertWith :: (Binary v)
            => DIntMap v -> (v -> v -> v) -> Key -> v -> MemTree v -> IO (MemTree v)
 insertWith dmap f k v tree = do
     s <- insertWith' dmap f k v tree
@@ -149,7 +149,7 @@ insertWith dmap f k v tree = do
       Ok tree'  -> return tree'
       Split kl l r -> return $ Internal 2 $ Bin (IM.singleton kl (NewObj l)) (NewObj r)
 
-insertWith' :: (Binary v, Show v)
+insertWith' :: (Binary v)
             => DIntMap v -> (v -> v -> v) -> Key -> v -> MemTree v -> IO (Insert v)
 --- We are on a leaf node, insert into it
 insertWith' _ f k v (Leaf n values)
