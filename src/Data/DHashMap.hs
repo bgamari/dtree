@@ -10,7 +10,11 @@ module Data.DHashMap ( -- * On-disk hash maps
                      , flushCache
                      , commit
                      , insert
+                     , lookup
                      ) where
+
+import Prelude hiding (lookup)
+import qualified Prelude
 
 import Control.Monad.State
 import Control.Monad.Reader
@@ -21,16 +25,16 @@ import Data.Binary (Binary)
 
 import qualified Data.DIntMap as DIM
 
-data DHashMap k v = DHashMap (DIM.DIntMap v)
+data DHashMap k v = DHashMap (DIM.DIntMap [(k,v)])
 
-new :: Binary v => FilePath -> IO (DHashMap k v)
+new :: (Binary k, Binary v) => FilePath -> IO (DHashMap k v)
 new fname = DHashMap <$> DIM.new fname
 
-open :: Binary v => FilePath -> IO (Maybe (DHashMap k v))
+open :: (Binary k, Binary v) => FilePath -> IO (Maybe (DHashMap k v))
 open fname = fmap DHashMap <$> DIM.open fname
 
 
-newtype DHashMapT k v m a = DHashMapT (StateT (DIM.MemTree v) (ReaderT (DIM.DIntMap v) m) a)
+newtype DHashMapT k v m a = DHashMapT (StateT (DIM.MemTree [(k,v)]) (ReaderT (DIM.DIntMap [(k,v)]) m) a)
                           deriving (Monad)
 
 runDHashMapT :: (Binary k, Binary v, MonadIO m)
@@ -48,16 +52,26 @@ commit = DHashMapT $ do dmap <- lift ask
                         void $ liftIO $ DIM.putRoot dmap s
                         return ()
 
-insert :: (Hashable k, Binary k, Binary v, MonadIO m)
+insert :: (Hashable k, Eq k, Binary k, Binary v, MonadIO m)
        => k -> v -> DHashMapT k v m ()
 insert = insertWith (const id)
 
-insertWith :: (Hashable k, Binary k, Binary v, MonadIO m)
+insertWith :: (Hashable k, Eq k, Binary k, Binary v, MonadIO m)
            => (v -> v -> v) -> k -> v -> DHashMapT k v m ()
 insertWith f k v = DHashMapT $ do
     dmap <- lift ask
     s <- get
-    liftIO (DIM.insertWith dmap f (hashKey k) v s) >>= put
+    liftIO (DIM.insertWith dmap go (hashKey k) [(k,v)] s) >>= put
+  where go ((k',v'):xs) y | k == k'   = (k', f v' v) : xs
+                          | otherwise = (k', v') : go xs y
+        go [] _                       = []
+
+lookup :: (Hashable k, Eq k, Binary k, Binary v, MonadIO m)
+       => k -> DHashMapT k v m (Maybe v)
+lookup k = DHashMapT $ do
+    dmap <- lift ask
+    vs <- liftIO (DIM.lookup (hashKey k) dmap)
+    return $ maybe Nothing (Prelude.lookup k) vs
 
 salt :: Int
 salt = 0xdeadbeef
