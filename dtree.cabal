@@ -11,7 +11,7 @@ homepage:      http://github.com/bgamari/dtree
 bug-reports:   http://github.com/bgamari/dtree/issues
 copyright:     Copyright (C) 2013 Ben Gamari
 synopsis:      On-disk trees
---description:   foo
+description:   A dtree is a on-disk mutable B+-tree.
 build-type:    Custom
 
 extra-source-files:
